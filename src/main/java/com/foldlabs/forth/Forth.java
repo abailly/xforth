@@ -4,11 +4,13 @@ import static fj.P.p;
 
 import java.util.Stack;
 
+import fj.F;
 import fj.P2;
 
 public class Forth {
 
-  private static final String DOT = ".";
+  public static final String DOT = ".";
+  public static final String PLUS = "+";
 
   public static final Object OK = new Object() {
 
@@ -21,13 +23,16 @@ public class Forth {
 
   private Stack<Object> stack = new Stack<Object>();
 
-  public P2<Object, Forth> input(Object object) {
-    if (object.equals(DOT)) {
-      return p(stack.pop(), this);
+  public P2<? extends Object, Forth> input(Object... objects) {
+    Object ret = OK;
+    for (Object object : objects) {
+      if (object.equals(DOT)) {
+        ret = stack.pop();
+      } else if (object.equals(PLUS)) {
+        int i = (Integer) stack.pop() + (Integer) stack.pop();
+        stack.push(i);
+      } else stack.push(object);
     }
-
-    stack.push(object);
-    return p(OK, this);
+    return p(ret, this);
   }
-
 }
