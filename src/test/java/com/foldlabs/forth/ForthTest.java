@@ -28,4 +28,5 @@ public class ForthTest {
   public void can_output_multiple_values() throws Exception {
     assertThat(new Forth().input(4, 3, "+", Forth.DOT, 2, 2, "+", Forth.DOT)._1()).contains(7, 4);
   }
+  
 }
