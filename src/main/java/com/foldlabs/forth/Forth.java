@@ -4,8 +4,8 @@ import static fj.P.p;
 
 import java.util.Stack;
 
-import fj.F;
 import fj.P2;
+import fj.data.List;
 
 public class Forth {
 
@@ -23,16 +23,17 @@ public class Forth {
 
   private Stack<Object> stack = new Stack<Object>();
 
-  public P2<? extends Object, Forth> input(Object... objects) {
-    Object ret = OK;
+  public P2<Iterable<Object>, Forth> input(Object... objects) {
+    List<Object> ret = List.nil();
     for (Object object : objects) {
       if (object.equals(DOT)) {
-        ret = stack.pop();
+        ret = ret.cons(stack.pop());
       } else if (object.equals(PLUS)) {
         int i = (Integer) stack.pop() + (Integer) stack.pop();
         stack.push(i);
       } else stack.push(object);
     }
-    return p(ret, this);
+    return p((Iterable<Object>) ret, this);
   }
+
 }
