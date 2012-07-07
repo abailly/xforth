@@ -18,11 +18,11 @@
 			<artifactId>asm</artifactId>
 			<version>3.3.1</version>
 		</dependency>
-        <dependency>
-            <groupId>org.functionaljava</groupId>
-            <artifactId>fj</artifactId>
-            <version>2.18</version>
-        </dependency>
+		<dependency>
+			<groupId>org.functionaljava</groupId>
+			<artifactId>functionaljava</artifactId>
+			<version>3.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>junit</groupId>
