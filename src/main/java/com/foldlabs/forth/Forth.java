@@ -33,7 +33,7 @@ public class Forth {
           return Option.some(arg0.stack.pop());
         }
       });
-      
+
       put(PLUS, new F<Forth, Option<Object>>() {
 
         public Option<Object> f(Forth arg0) {
@@ -55,6 +55,9 @@ public class Forth {
         stack.push(object);
       } else {
         F<Forth, Option<Object>> word = dictionary.get(object);
+        if (word == null) {
+          throw new ForthException("unknown word " + object);
+        }
         Option<Object> output = word.f(this);
         if (output.isSome()) {
           ret = ret.cons(output.some());
