@@ -16,4 +16,11 @@ public class ForthInterpreterTest {
     new ForthInterpreter().interpret(new StringReader("4 3 + .\n\r2 2 + ."), writer);
     assertThat(writer.toString()).matches("7.*4");
   }
+
+  @Test
+  public void dont_care_about_leading_and_trailing_whitespace() throws IOException {
+    StringWriter writer = new StringWriter();
+    new ForthInterpreter().interpret(new StringReader("  \t\n 4 3 + .\n\r2 2 + .  "), writer);
+    assertThat(writer.toString()).matches("7.*4");
+  }
 }

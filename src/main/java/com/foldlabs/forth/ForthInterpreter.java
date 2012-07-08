@@ -19,35 +19,37 @@ public class ForthInterpreter {
     CharBuffer chars = CharBuffer.allocate(MAX_WORD_LENGTH);
     while ((c = reader.read()) > -1) {
       if (Character.isWhitespace(c)) {
-        if (chars.position() > 0) {
-          String word = extractWord(chars);
-          interpretWord(writer, word);
+        if (hasSomeChars(chars)) {
+          forth = interpretWord(writer, toWord(chars), forth);
         }
       } else {
         chars.put((char) c);
       }
     }
-    if (chars.position() > 0) {
-      String word = extractWord(chars);
-      interpretWord(writer, word);
+    if (hasSomeChars(chars)) {
+      forth = interpretWord(writer, toWord(chars), forth);
     }
     return this;
   }
 
-  String extractWord(CharBuffer chars) {
+  boolean hasSomeChars(CharBuffer chars) {
+    return chars.position() > 0;
+  }
+
+  private String toWord(CharBuffer chars) {
     chars.flip();
     String word = chars.toString();
     chars.clear();
     return word;
   }
 
-  void interpretWord(Writer writer, String word) throws IOException {
+  private Forth interpretWord(Writer writer, String word, Forth forth) throws IOException {
     Object input = analyze(word);
     P2<Iterable<Object>, Forth> result = forth.input(input);
-    this.forth = result._2();
     for (Object output : result._1()) {
       writer.append(output.toString());
     }
+    return result._2();
   }
 
   private Object analyze(String word) {
