@@ -19,21 +19,19 @@ public class ForthInterpreter {
     CharBuffer chars = CharBuffer.allocate(MAX_WORD_LENGTH);
     while ((c = reader.read()) > -1) {
       if (Character.isWhitespace(c)) {
-        if (hasSomeChars(chars)) {
-          forth = interpretWord(writer, toWord(chars), forth);
-        }
+        interpretWordIfNotEmpty(writer, chars);
       } else {
         chars.put((char) c);
       }
     }
-    if (hasSomeChars(chars)) {
-      forth = interpretWord(writer, toWord(chars), forth);
-    }
+    interpretWordIfNotEmpty(writer, chars);
     return this;
   }
 
-  boolean hasSomeChars(CharBuffer chars) {
-    return chars.position() > 0;
+  private void interpretWordIfNotEmpty(Writer writer, CharBuffer chars) throws IOException {
+    if (chars.position() > 0) {
+      forth = interpretWord(writer, toWord(chars), forth);
+    }
   }
 
   private String toWord(CharBuffer chars) {
