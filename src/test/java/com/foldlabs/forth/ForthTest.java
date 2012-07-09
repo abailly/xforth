@@ -29,6 +29,11 @@ public class ForthTest {
     assertThat(new Forth().input(4, 3, "+", Forth.DOT, 2, 2, "+", Forth.DOT)._1()).contains(7, 4);
   }
 
+  @Test
+  public void can_define_new_words() throws Exception {
+    assertThat(new Forth().input(Forth.COLON, "foo", "+", Forth.ENTER, 4, 3, "foo", Forth.DOT)._1()).contains(7);
+  }
+  
   @Test(expected = ForthException.class)
   public void fails_when_input_word_is_unknown() throws Exception {
     new Forth().input("foo");
