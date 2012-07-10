@@ -28,9 +28,9 @@ public class Forth {
     public Option<Object> f(Forth a) {
       Forth f = new Forth();
       f.stack = a.stack;
-      f.dictionary  = new HashMap<>(a.dictionary);
+      f.dictionary = new HashMap<>(a.dictionary);
       P2<Iterable<Object>, Forth> output = f.input(thread.toArray());
-      return Option.some((Object)output._1());
+      return Option.some((Object) output._1());
     }
   }
 
@@ -48,9 +48,47 @@ public class Forth {
 
   };
 
-  public static enum State {
-    Compiling, Executing;
+  public static interface State {
+    List<Object> eval(List<Object> ret, Object object);
   }
+
+  private State compiling = new State() {
+
+    @Override
+    public List<Object> eval(List<Object> ret, Object object) {
+      Word word = dictionary.get(object);
+      if (word != null && word.immediate) {
+        Option<Object> output = word.f(Forth.this);
+        if (output.isSome()) {
+          ret = ret.cons(output.some());
+        }
+      } else {
+        compilingThread.add(object);
+      }
+      return ret;
+    }
+  };
+
+  private State executing = new State() {
+
+    @Override
+    public List<Object> eval(List<Object> ret, Object object) {
+      if (isLiteral(object)) {
+        stack.push(object);
+        return ret;
+      }
+
+      Word word = dictionary.get(object);
+      if (word == null) {
+        throw new ForthException("unknown word '" + object + "'");
+      }
+      Option<Object> output = word.f(Forth.this);
+      if (output.isSome()) {
+        ret = ret.cons(output.some());
+      }
+      return ret;
+    }
+  };
 
   public static abstract class Word extends F<Forth, Option<Object>> {
 
@@ -84,7 +122,7 @@ public class Forth {
       put(COLON, new Word(false) {
 
         public Option<Object> f(Forth forth) {
-          forth.state = Forth.State.Compiling;
+          forth.state = compiling;
           forth.definingWord = forth.input.remove(0);
           forth.compilingThread = new Stack<>();
           return Option.none();
@@ -94,7 +132,7 @@ public class Forth {
       put(ENTER, new Word(true) {
 
         public Option<Object> f(Forth forth) {
-          forth.state = Forth.State.Executing;
+          forth.state = executing;
           dictionary.put(forth.definingWord, new UserWord(false, forth.compilingThread));
           return Option.none();
         }
@@ -103,7 +141,7 @@ public class Forth {
   };
 
   private Stack<Object> stack = new Stack<>();
-  private State state = State.Executing;
+  private State state = executing;
   private Object definingWord = null;
   private Stack<Object> compilingThread = null;
 
@@ -113,34 +151,15 @@ public class Forth {
     this.input = new ArrayList<>();
     this.input.addAll(Arrays.asList(objects));
     List<Object> ret = List.nil();
-    while(!input.isEmpty()) {
+    while (!input.isEmpty()) {
       Object object = input.remove(0);
-      if (state == State.Executing) {
-        if (object instanceof Integer) {
-          stack.push(object);
-        } else {
-          Word word = dictionary.get(object);
-          if (word == null) {
-            throw new ForthException("unknown word '" + object + "'");
-          }
-          Option<Object> output = word.f(this);
-          if (output.isSome()) {
-            ret = ret.cons(output.some());
-          }
-        }
-      } else {
-        Word word = dictionary.get(object);
-        if (word != null && word.immediate) {
-          Option<Object> output = word.f(this);
-          if (output.isSome()) {
-            ret = ret.cons(output.some());
-          }
-        } else {
-          compilingThread.add(object);
-        }
-      }
+      ret = state.eval(ret, object);
     }
     return p((Iterable<Object>) ret, this);
+  }
+
+  boolean isLiteral(Object object) {
+    return object instanceof Integer;
   }
 
 }
