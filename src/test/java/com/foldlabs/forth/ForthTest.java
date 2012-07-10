@@ -38,10 +38,15 @@ public class ForthTest {
   public void can_define_new_words_containing_undefined_words() throws Exception {
     assertThat(new Forth().input(Forth.COLON, "foo", "bar", Forth.ENTER)._1()).isEmpty();
   }
-  
+
   @Test(expected = ForthException.class)
   public void fails_when_input_word_is_unknown() throws Exception {
     new Forth().input("foo");
+  }
+
+  @Test(expected = ForthException.class)
+  public void dot_fails_when_stack_is_empty() throws Exception {
+    new Forth().input(Forth.DOT);
   }
 
 }

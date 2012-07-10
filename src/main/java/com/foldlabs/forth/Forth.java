@@ -104,15 +104,18 @@ public class Forth {
     {
       put(DOT, new Word(false) {
 
-        public Option<Object> f(Forth arg0) {
-          return Option.some(arg0.stack.pop());
+        public Option<Object> f(Forth forth) {
+          if(forth.stack.isEmpty()) {
+            throw new ForthException("empty stack: Cannot display");
+          }
+          return Option.some(forth.stack.pop());
         }
       });
 
       put(PLUS, new Word(false) {
 
-        public Option<Object> f(Forth arg0) {
-          Stack<Object> stack = arg0.stack;
+        public Option<Object> f(Forth forth) {
+          Stack<Object> stack = forth.stack;
           int i = (Integer) stack.pop() + (Integer) stack.pop();
           stack.push(i);
           return Option.none();
