@@ -23,4 +23,5 @@ public class ForthInterpreterTest {
     new ForthInterpreter().interpret(new StringReader("  \t\n 4 3 + .\n\r2 2 + .  "), writer);
     assertThat(writer.toString()).matches("7.*4");
   }
+  
 }

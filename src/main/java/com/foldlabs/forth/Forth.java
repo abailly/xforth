@@ -38,6 +38,8 @@ public class Forth {
   public static final String PLUS = "+";
   public static final Object COLON = ":";
   public static final Object ENTER = ";";
+  public static final Object START_COMMENT = "(";
+  public static final Object END_COMMENT = ")";
 
   public static final Object OK = new Object() {
 
@@ -105,7 +107,7 @@ public class Forth {
       put(DOT, new Word(false) {
 
         public Option<Object> f(Forth forth) {
-          if(forth.stack.isEmpty()) {
+          if (forth.stack.isEmpty()) {
             throw new ForthException("empty stack: Cannot display");
           }
           return Option.some(forth.stack.pop());
@@ -156,6 +158,12 @@ public class Forth {
     List<Object> ret = List.nil();
     while (!input.isEmpty()) {
       Object object = input.remove(0);
+      if (START_COMMENT.equals(object)) {
+        do {
+          object = input.remove(0);
+        } while (!END_COMMENT.equals(object));
+        object = input.remove(0);
+      }
       ret = state.eval(ret, object);
     }
     return p((Iterable<Object>) ret, this);

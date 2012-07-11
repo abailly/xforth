@@ -1,6 +1,7 @@
 package com.foldlabs.forth;
 
 import static org.fest.assertions.Assertions.assertThat;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -33,10 +34,15 @@ public class ForthTest {
   public void can_define_new_words() throws Exception {
     assertThat(new Forth().input(Forth.COLON, "foo", "+", Forth.ENTER, 4, 3, "foo", Forth.DOT)._1()).contains(7);
   }
-  
+
   @Test
   public void can_define_new_words_containing_undefined_words() throws Exception {
     assertThat(new Forth().input(Forth.COLON, "foo", "bar", Forth.ENTER)._1()).isEmpty();
+  }
+
+  @Test
+  public void comments_are_ignored() throws Exception {
+    assertThat(new Forth().input(3, "(", "this", "is", "a", "comment", ")", 4, Forth.PLUS, Forth.DOT)._1()).contains(7);
   }
 
   @Test(expected = ForthException.class)
