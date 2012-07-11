@@ -131,7 +131,7 @@ public class Forth {
 
                                              public Option<Object> f(Forth forth) {
                                                forth.state = compiling;
-                                               forth.definingWord = forth.head();
+                                               forth.definingWord = forth.input();
                                                forth.compilingThread = new Stack<>();
                                                return Option.none();
                                              }
@@ -150,7 +150,7 @@ public class Forth {
 
                                              public Option<Object> f(Forth forth) {
                                                if (!forth.condition()) {
-                                                 while (!THEN.equals(forth.head()))
+                                                 while (!THEN.equals(forth.input()))
                                                    ;
                                                }
                                                return Option.none();
@@ -169,7 +169,7 @@ public class Forth {
                                              public Option<Object> f(Forth forth) {
                                                Object object = null;
                                                do {
-                                                 object = head();
+                                                 object = input();
                                                } while (!END_COMMENT.equals(object));
                                                return Option.none();
                                              }
@@ -182,7 +182,7 @@ public class Forth {
     this.input.addAll(Arrays.asList(objects));
     List<Object> ret = List.nil();
     while (!input.isEmpty()) {
-      ret = state.eval(ret, head());
+      ret = state.eval(ret, input());
     }
     return p((Iterable<Object>) ret, this);
   }
@@ -198,7 +198,7 @@ public class Forth {
     return stack.pop();
   }
 
-  private Object head() {
+  private Object input() {
     if (input == null || input.isEmpty()) {
       throw new ForthException("no more input");
     }
