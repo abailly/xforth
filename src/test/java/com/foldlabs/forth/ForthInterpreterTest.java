@@ -2,26 +2,43 @@ package com.foldlabs.forth;
 
 import static org.fest.assertions.Assertions.assertThat;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class ForthInterpreterTest {
 
+  private static final File basedir = new File(ForthInterpreter.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+  private final String testCase;
+
+  @Parameters
+  public static List<Object[]> testCases() throws IOException {
+    List<Object[]> cases = new ArrayList<>();
+    for (File testCase : new File(basedir, "test-cases").listFiles()) {
+      cases.add(new Object[] { FileUtils.readFileToString(testCase) });
+    }
+    return cases;
+  }
+
+  public ForthInterpreterTest(String testCase) {
+    this.testCase = testCase;
+  }
+  
   @Test
-  public void can_interpret_input_from_reader_and_output_to_writer() throws IOException {
+  public void run_test_case() throws IOException {
     StringWriter writer = new StringWriter();
-    new ForthInterpreter().interpret(new StringReader("4 3 + .   \t\n\r2 2 + ."), writer);
+    new ForthInterpreter().interpret(new StringReader(testCase), writer);
     assertThat(writer.toString()).matches("7.*4");
   }
 
-  @Test
-  public void dont_care_about_leading_and_trailing_whitespace() throws IOException {
-    StringWriter writer = new StringWriter();
-    new ForthInterpreter().interpret(new StringReader("  \t\n 4 3 + .\n\r2 2 + .  "), writer);
-    assertThat(writer.toString()).matches("7.*4");
-  }
-  
 }
