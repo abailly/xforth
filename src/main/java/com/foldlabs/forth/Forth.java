@@ -34,21 +34,29 @@ public class Forth {
     }
   }
 
-  public static final String DOT = ".";
-  public static final String PLUS = "+";
-  public static final Object COLON = ":";
-  public static final Object ENTER = ";";
-  public static final Object START_COMMENT = "(";
-  public static final Object END_COMMENT = ")";
+  public static final String DOT             = ".";
+  public static final String PLUS            = "+";
+  public static final Object COLON           = ":";
+  public static final Object ENTER           = ";";
+  public static final Object START_COMMENT   = "(";
+  public static final Object END_COMMENT     = ")";
+  public static final Object THEN            = "THEN";
+  public static final Object IF              = "IF";
 
-  public static final Object OK = new Object() {
+  private Stack<Object>      stack           = new Stack<>();
+  private Object             definingWord    = null;
+  private Stack<Object>      compilingThread = null;
 
-    @Override
-    public String toString() {
-      return "OK";
-    }
+  private ArrayList<Object>  input;
 
-  };
+  public static final Object OK              = new Object() {
+
+                                               @Override
+                                               public String toString() {
+                                                 return "OK";
+                                               }
+
+                                             };
 
   public static interface State {
     List<Object> eval(List<Object> ret, Object object);
@@ -56,41 +64,41 @@ public class Forth {
 
   private State compiling = new State() {
 
-    @Override
-    public List<Object> eval(List<Object> ret, Object object) {
-      Word word = dictionary.get(object);
-      if (word != null && word.immediate) {
-        Option<Object> output = word.f(Forth.this);
-        if (output.isSome()) {
-          ret = ret.cons(output.some());
-        }
-      } else {
-        compilingThread.add(object);
-      }
-      return ret;
-    }
-  };
+                            @Override
+                            public List<Object> eval(List<Object> ret, Object object) {
+                              Word word = dictionary.get(object);
+                              if (word != null && word.immediate) {
+                                Option<Object> output = word.f(Forth.this);
+                                if (output.isSome()) {
+                                  ret = ret.cons(output.some());
+                                }
+                              } else {
+                                compilingThread.add(object);
+                              }
+                              return ret;
+                            }
+                          };
 
   private State executing = new State() {
 
-    @Override
-    public List<Object> eval(List<Object> ret, Object object) {
-      if (isLiteral(object)) {
-        stack.push(object);
-        return ret;
-      }
+                            @Override
+                            public List<Object> eval(List<Object> ret, Object object) {
 
-      Word word = dictionary.get(object);
-      if (word == null) {
-        throw new ForthException("unknown word '" + object + "'");
-      }
-      Option<Object> output = word.f(Forth.this);
-      if (output.isSome()) {
-        ret = ret.cons(output.some());
-      }
-      return ret;
-    }
-  };
+                              if (isLiteral(object)) {
+                                stack.push(object);
+                                return ret;
+                              }
+
+                              Word word = checkWordExists(object);
+                              Option<Object> output = word.f(Forth.this);
+                              if (output.isSome()) {
+                                ret = ret.cons(output.some());
+                              }
+                              return ret;
+                            }
+                          };
+
+  private State state     = executing;
 
   public static abstract class Word extends F<Forth, Option<Object>> {
 
@@ -103,54 +111,63 @@ public class Forth {
   }
 
   private Map<Object, Word> dictionary = new HashMap<Object, Word>() {
-    {
-      put(DOT, new Word(false) {
+                                         {
+                                           put(DOT, new Word(false) {
 
-        public Option<Object> f(Forth forth) {
-          if (forth.stack.isEmpty()) {
-            throw new ForthException("empty stack: Cannot display");
-          }
-          return Option.some(forth.stack.pop());
-        }
-      });
+                                             public Option<Object> f(Forth forth) {
+                                               forth.checkStackNotEmpty();
+                                               return Option.some(forth.stack.pop());
+                                             }
+                                           });
 
-      put(PLUS, new Word(false) {
+                                           put(PLUS, new Word(false) {
 
-        public Option<Object> f(Forth forth) {
-          Stack<Object> stack = forth.stack;
-          int i = (Integer) stack.pop() + (Integer) stack.pop();
-          stack.push(i);
-          return Option.none();
-        }
-      });
+                                             public Option<Object> f(Forth forth) {
+                                               Stack<Object> stack = forth.stack;
+                                               int i = (Integer) stack.pop() + (Integer) stack.pop();
+                                               stack.push(i);
+                                               return Option.none();
+                                             }
+                                           });
 
-      put(COLON, new Word(false) {
+                                           put(COLON, new Word(false) {
 
-        public Option<Object> f(Forth forth) {
-          forth.state = compiling;
-          forth.definingWord = forth.input.remove(0);
-          forth.compilingThread = new Stack<>();
-          return Option.none();
-        }
-      });
+                                             public Option<Object> f(Forth forth) {
+                                               forth.state = compiling;
+                                               forth.definingWord = forth.input.remove(0);
+                                               forth.compilingThread = new Stack<>();
+                                               return Option.none();
+                                             }
+                                           });
 
-      put(ENTER, new Word(true) {
+                                           put(ENTER, new Word(true) {
 
-        public Option<Object> f(Forth forth) {
-          forth.state = executing;
-          dictionary.put(forth.definingWord, new UserWord(false, forth.compilingThread));
-          return Option.none();
-        }
-      });
-    }
-  };
+                                             public Option<Object> f(Forth forth) {
+                                               forth.state = executing;
+                                               dictionary.put(forth.definingWord, new UserWord(false, forth.compilingThread));
+                                               return Option.none();
+                                             }
+                                           });
 
-  private Stack<Object> stack = new Stack<>();
-  private State state = executing;
-  private Object definingWord = null;
-  private Stack<Object> compilingThread = null;
+                                           put(IF, new Word(true) {
 
-  private ArrayList<Object> input;
+                                             public Option<Object> f(Forth forth) {
+                                               if (!forth.condition()) {
+                                                 while (!THEN.equals(forth.input.remove(0)))
+                                                   ;
+                                               }
+                                               return Option.none();
+                                             }
+                                           });
+
+                                           put(THEN, new Word(true) {
+
+                                             public Option<Object> f(Forth forth) {
+                                               return Option.none();
+                                             }
+                                           });
+                                         }
+                                       };
 
   public P2<Iterable<Object>, Forth> input(Object... objects) {
     this.input = new ArrayList<>();
@@ -169,8 +186,26 @@ public class Forth {
     return p((Iterable<Object>) ret, this);
   }
 
-  boolean isLiteral(Object object) {
+  private boolean isLiteral(Object object) {
     return object instanceof Integer;
+  }
+
+  private Word checkWordExists(Object object) {
+    Word word = dictionary.get(object);
+    if (word == null) {
+      throw new ForthException("unknown word '" + object + "'");
+    }
+    return word;
+  }
+
+  void checkStackNotEmpty() {
+    if (stack.isEmpty()) {
+      throw new ForthException("empty stack: Cannot display");
+    }
+  }
+
+  boolean condition() {
+    return 0 != (Integer) stack.pop();
   }
 
 }
