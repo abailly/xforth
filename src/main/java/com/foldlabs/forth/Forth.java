@@ -122,9 +122,7 @@ public class Forth {
                                            put(PLUS, new Word(false) {
 
                                              public Option<Object> f(Forth forth) {
-                                               Stack<Object> stack = forth.stack;
-                                               int i = (Integer) stack.pop() + (Integer) stack.pop();
-                                               stack.push(i);
+                                               forth.push((Integer) forth.pop() + (Integer) forth.pop());
                                                return Option.none();
                                              }
                                            });
@@ -142,8 +140,8 @@ public class Forth {
                                            put(ENTER, new Word(true) {
 
                                              public Option<Object> f(Forth forth) {
+                                               defineWord();
                                                forth.state = executing;
-                                               dictionary.put(forth.definingWord, new UserWord(false, forth.compilingThread));
                                                return Option.none();
                                              }
                                            });
@@ -165,6 +163,17 @@ public class Forth {
                                                return Option.none();
                                              }
                                            });
+
+                                           put(START_COMMENT, new Word(true) {
+
+                                             public Option<Object> f(Forth forth) {
+                                               Object object = null;
+                                               do {
+                                                 object = head();
+                                               } while (!END_COMMENT.equals(object));
+                                               return Option.none();
+                                             }
+                                           });
                                          }
                                        };
 
@@ -173,25 +182,26 @@ public class Forth {
     this.input.addAll(Arrays.asList(objects));
     List<Object> ret = List.nil();
     while (!input.isEmpty()) {
-      Object object = head();
-      if (START_COMMENT.equals(object)) {
-        do {
-          object = head();
-        } while (!END_COMMENT.equals(object));
-        object = head();
-      }
-      ret = state.eval(ret, object);
+      ret = state.eval(ret, head());
     }
     return p((Iterable<Object>) ret, this);
   }
 
+  protected void push(Object item) {
+    stack.push(item);
+  }
+
   private Object pop() {
-    checkStackNotEmpty();
+    if (stack.isEmpty()) {
+      throw new ForthException("empty stack: Cannot display");
+    }
     return stack.pop();
   }
 
   private Object head() {
-    checkInputNotEmpty();
+    if (input == null || input.isEmpty()) {
+      throw new ForthException("no more input");
+    }
     return input.remove(0);
   }
 
@@ -207,20 +217,12 @@ public class Forth {
     return word;
   }
 
-  private void checkStackNotEmpty() {
-    if (stack.isEmpty()) {
-      throw new ForthException("empty stack: Cannot display");
-    }
-  }
-
-  private void checkInputNotEmpty() {
-    if (input == null || input.isEmpty()) {
-      throw new ForthException("no more input");
-    }
-  }
-
   private boolean condition() {
     return 0 != (Integer) stack.pop();
+  }
+
+  private void defineWord() {
+    dictionary.put(definingWord, new UserWord(false, compilingThread));
   }
 
 }
