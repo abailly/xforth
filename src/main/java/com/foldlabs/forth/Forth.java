@@ -115,8 +115,7 @@ public class Forth {
                                            put(DOT, new Word(false) {
 
                                              public Option<Object> f(Forth forth) {
-                                               forth.checkStackNotEmpty();
-                                               return Option.some(forth.stack.pop());
+                                               return Option.some(forth.pop());
                                              }
                                            });
 
@@ -134,7 +133,7 @@ public class Forth {
 
                                              public Option<Object> f(Forth forth) {
                                                forth.state = compiling;
-                                               forth.definingWord = forth.input.remove(0);
+                                               forth.definingWord = forth.head();
                                                forth.compilingThread = new Stack<>();
                                                return Option.none();
                                              }
@@ -153,7 +152,7 @@ public class Forth {
 
                                              public Option<Object> f(Forth forth) {
                                                if (!forth.condition()) {
-                                                 while (!THEN.equals(forth.input.remove(0)))
+                                                 while (!THEN.equals(forth.head()))
                                                    ;
                                                }
                                                return Option.none();
@@ -174,16 +173,26 @@ public class Forth {
     this.input.addAll(Arrays.asList(objects));
     List<Object> ret = List.nil();
     while (!input.isEmpty()) {
-      Object object = input.remove(0);
+      Object object = head();
       if (START_COMMENT.equals(object)) {
         do {
-          object = input.remove(0);
+          object = head();
         } while (!END_COMMENT.equals(object));
-        object = input.remove(0);
+        object = head();
       }
       ret = state.eval(ret, object);
     }
     return p((Iterable<Object>) ret, this);
+  }
+
+  private Object pop() {
+    checkStackNotEmpty();
+    return stack.pop();
+  }
+
+  private Object head() {
+    checkInputNotEmpty();
+    return input.remove(0);
   }
 
   private boolean isLiteral(Object object) {
@@ -198,13 +207,19 @@ public class Forth {
     return word;
   }
 
-  void checkStackNotEmpty() {
+  private void checkStackNotEmpty() {
     if (stack.isEmpty()) {
       throw new ForthException("empty stack: Cannot display");
     }
   }
 
-  boolean condition() {
+  private void checkInputNotEmpty() {
+    if (input == null || input.isEmpty()) {
+      throw new ForthException("no more input");
+    }
+  }
+
+  private boolean condition() {
     return 0 != (Integer) stack.pop();
   }
 

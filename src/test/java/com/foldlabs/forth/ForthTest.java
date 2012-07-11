@@ -60,4 +60,13 @@ public class ForthTest {
     new Forth().input(Forth.DOT);
   }
 
+  @Test(expected = ForthException.class)
+  public void colon_fails_when_it_has_no_input() throws Exception {
+    new Forth().input(Forth.COLON);
+  }
+
+  @Test(expected = ForthException.class)
+  public void if_fails_when_it_has_not_enough_input() throws Exception {
+    new Forth().input(0,Forth.IF,3);
+  }
 }
