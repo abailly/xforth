@@ -19,7 +19,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class ForthInterpreterTest {
 
-  private static final File   basedir        = new File(ForthInterpreter.class.getProtectionDomain().getCodeSource().getLocation()
+  private static final File   basedir        = new File(ForthInterpreterTest.class.getProtectionDomain().getCodeSource().getLocation()
                                                  .getFile());
 
   private static List<String> expectedOutput = new ArrayList<>();
