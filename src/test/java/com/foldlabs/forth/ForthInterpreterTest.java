@@ -19,18 +19,18 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class ForthInterpreterTest {
 
-  private static final File   basedir        = new File(ForthInterpreterTest.class.getProtectionDomain().getCodeSource().getLocation()
-                                                 .getFile());
+  private static final File     basedir        = new File(ForthInterpreterTest.class.getProtectionDomain().getCodeSource()
+                                                   .getLocation().getFile());
 
-  private static List<String> expectedOutput = new ArrayList<>();
+  private static List<String>   expectedOutput = new ArrayList<>();
 
-  private static FilenameFilter testCaseFiles = new FilenameFilter() {
-    
-    @Override
-    public boolean accept(File dir, String name) {
-      return name.matches("\\d+-.*\\.f");
-    }
-  };
+  private static FilenameFilter testCaseFiles  = new FilenameFilter() {
+
+                                                 @Override
+                                                 public boolean accept(File dir, String name) {
+                                                   return name.matches("\\d+-.*\\.f");
+                                                 }
+                                               };
 
   static {
     try {
@@ -40,13 +40,13 @@ public class ForthInterpreterTest {
     }
   }
 
-  private final String        testCase;
-  private final int           testId;
+  private final String          testCase;
+  private final int             testId;
 
   @Parameters
   public static List<Object[]> testCases() throws IOException {
     List<Object[]> cases = new ArrayList<>();
-    for (File testCase : new File(basedir, "test-cases").listFiles(testCaseFiles )) {
+    for (File testCase : new File(basedir, "test-cases").listFiles(testCaseFiles)) {
       String content = FileUtils.readFileToString(testCase);
       int testId = Integer.parseInt(testCase.getName().split("-")[0]);
       cases.add(new Object[] { testId, content });

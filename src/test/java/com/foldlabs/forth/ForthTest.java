@@ -45,6 +45,11 @@ public class ForthTest {
   }
 
   @Test
+  public void manipulate_stack() throws Exception {
+    assertThat(new Forth().input(3, Forth.DUP, Forth.DOT, Forth.DOT)._1()).contains(3, 3);
+  }
+
+  @Test
   public void can_evaluate_single_branch_conditionals() throws Exception {
     assertThat(new Forth().input(0, Forth.IF, 3, Forth.DOT, Forth.THEN, 4, Forth.DOT)._1()).containsOnly(4);
     assertThat(new Forth().input(1, Forth.IF, 3, Forth.DOT, Forth.THEN, 4, Forth.DOT)._1()).containsOnly(3, 4);
@@ -67,6 +72,6 @@ public class ForthTest {
 
   @Test(expected = ForthException.class)
   public void if_fails_when_it_has_not_enough_input() throws Exception {
-    new Forth().input(0,Forth.IF,3);
+    new Forth().input(0, Forth.IF, 3);
   }
 }
