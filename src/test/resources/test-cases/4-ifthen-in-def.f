@@ -1,0 +1,4 @@
+: FOO IF 3 . THEN 2 . ;
+
+0 FOO
+1 FOO

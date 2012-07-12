@@ -150,7 +150,7 @@ public class Forth {
                                                   }
                                                 });
 
-                                                put(IF, new Word(IF, true) {
+                                                put(IF, new Word(IF, false) {
 
                                                   public Option<Object> f(Forth forth) {
                                                     if (!forth.condition()) {
@@ -161,7 +161,7 @@ public class Forth {
                                                   }
                                                 });
 
-                                                put(THEN, new Word(THEN, true) {
+                                                put(THEN, new Word(THEN, false) {
 
                                                   public Option<Object> f(Forth forth) {
                                                     return Option.none();
