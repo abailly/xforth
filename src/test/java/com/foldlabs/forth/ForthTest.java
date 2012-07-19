@@ -50,6 +50,11 @@ public class ForthTest {
   }
 
   @Test
+  public void can_define_a_variable() throws Exception {
+    new Forth().input(Forth.VARIABLE, "DATA");
+  }
+
+  @Test
   public void can_evaluate_single_branch_conditionals() throws Exception {
     assertThat(new Forth().input(0, Forth.IF, 3, Forth.DOT, Forth.THEN, 4, Forth.DOT)._1()).containsOnly(4);
     assertThat(new Forth().input(1, Forth.IF, 3, Forth.DOT, Forth.THEN, 4, Forth.DOT)._1()).containsOnly(3, 4);

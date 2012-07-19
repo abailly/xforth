@@ -24,6 +24,8 @@ public class Forth {
   public static final String THEN          = "THEN";
   public static final String IF            = "IF";
   public static final String DUP           = "DUP";
+  public static final String VARIABLE      = "VARIABLE";
+
   //
   public static final Object OK            = new Object() {
 
@@ -55,6 +57,19 @@ public class Forth {
 
   }
 
+  private static class Variable extends Word {
+
+    public Variable(String name) {
+      super(name, false);
+    }
+
+    @Override
+    public Option<Object> f(Forth a) {
+      return null;
+    }
+
+  }
+
   private static class UserWord extends Word {
 
     private ArrayList<Object> thread;
@@ -67,7 +82,7 @@ public class Forth {
     @Override
     public Option<Object> f(Forth a) {
       Forth f = new Forth();
-      f.stack = a.stack;
+      f.dataStack = a.dataStack;
       f.dictionary = new HashMap<>(a.dictionary);
       P2<Iterable<Object>, Forth> output = f.input(thread.toArray());
       return Option.some((Object) output._1());
@@ -98,7 +113,7 @@ public class Forth {
                                               public List<Object> eval(List<Object> ret, Object object) {
 
                                                 if (isLiteral(object)) {
-                                                  stack.push(object);
+                                                  dataStack.push(object);
                                                   return ret;
                                                 }
 
@@ -188,10 +203,20 @@ public class Forth {
                                                     return Option.none();
                                                   }
                                                 });
+
+                                                put(VARIABLE, new Word(VARIABLE, true) {
+
+                                                  public Option<Object> f(Forth forth) {
+                                                    String name = (String) forth.input();
+                                                    defineVariable(name);
+                                                    return Option.none();
+                                                  }
+
+                                                });
                                               }
                                             };
 
-  private Stack<Object>     stack           = new Stack<>();
+  private Stack<Object>     dataStack       = new Stack<>();
   private String            definingWord    = null;
   private Stack<Object>     compilingThread = null;
   private Word              current         = null;
@@ -208,14 +233,14 @@ public class Forth {
   }
 
   protected void push(Object item) {
-    stack.push(item);
+    dataStack.push(item);
   }
 
   private Object pop() {
-    if (stack.isEmpty()) {
-      throw new ForthException("empty stack: Cannot display");
+    if (dataStack.isEmpty()) {
+      throw new ForthException("empty dataStack: Cannot display");
     }
-    return stack.pop();
+    return dataStack.pop();
   }
 
   private Object input() {
@@ -238,11 +263,16 @@ public class Forth {
   }
 
   private boolean condition() {
-    return 0 != (Integer) stack.pop();
+    return 0 != (Integer) dataStack.pop();
   }
 
   private void defineWord() {
     dictionary.put(definingWord, new UserWord(definingWord, false, compilingThread));
+  }
+
+  private void defineVariable(String name) {
+    Variable v = new Variable(name);
+    dictionary.put(name, v);
   }
 
 }
