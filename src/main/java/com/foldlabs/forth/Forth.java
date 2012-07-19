@@ -1,6 +1,7 @@
 package com.foldlabs.forth;
 
 import static fj.P.p;
+import static fj.data.Option.none;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +26,8 @@ public class Forth {
   public static final String IF            = "IF";
   public static final String DUP           = "DUP";
   public static final String VARIABLE      = "VARIABLE";
+  public static final String BANG          = "!";
+  public static final String AT            = "@";
 
   //
   public static final Object OK            = new Object() {
@@ -59,13 +62,20 @@ public class Forth {
 
   private static class Variable extends Word {
 
+    private Object value;
+
     public Variable(String name) {
       super(name, false);
     }
 
     @Override
     public Option<Object> f(Forth a) {
-      return null;
+      a.push(this);
+      return none();
+    }
+
+    public void store(Object value) {
+      this.value = value;
     }
 
   }
@@ -209,6 +219,25 @@ public class Forth {
                                                   public Option<Object> f(Forth forth) {
                                                     String name = (String) forth.input();
                                                     defineVariable(name);
+                                                    return Option.none();
+                                                  }
+
+                                                });
+                                                put(BANG, new Word(BANG, true) {
+
+                                                  public Option<Object> f(Forth forth) {
+                                                    Variable cell = (Variable) forth.pop();
+                                                    Object value = forth.pop();
+                                                    cell.store(value);
+                                                    return Option.none();
+                                                  }
+
+                                                });
+                                                put(AT, new Word(AT, true) {
+
+                                                  public Option<Object> f(Forth forth) {
+                                                    Variable cell = (Variable) forth.pop();
+                                                    forth.push(cell.value);
                                                     return Option.none();
                                                   }
 
